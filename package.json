@@ -24,6 +24,7 @@
     "@cycle/xstream-run": "^3.1.0",
     "ramda": "^0.22.1",
     "rxjs": "^5.0.0-beta.12",
+    "universal-fetch": "0.0.1",
     "xstream": "^6.4.1"
   }
 }
