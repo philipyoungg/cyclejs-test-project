@@ -8,7 +8,7 @@ import UserList from './User/UserList';
 const mainComponent = () => ({
   DOM: Observable.of('state')
     .map(e =>
-    h1(`default ${e}!`)
+    h1('.pv4.ph5', `Default ${e}!`)
   ),
 });
 
@@ -18,14 +18,13 @@ const userComponent = ({ DOM }) => {
   const toggleFilter = DOM.select('.toggle-filter').events('click')
     .mapTo('toggle click')
     .map(bool => state => //eslint-disable-line
-      R.evolve({
-        filter: R.not,
-      })(state));
+    R.evolve({
+      filter: R.not,
+    })(state));
 
   const deleteUser = DOM.select('.delete-user').events('click')
     .map(e => e.target.getAttribute('key'))
     .map(Number)
-    .do(console.log)
     .map(actionId => state =>
       R.evolve({
         users: R.reject(R.propEq('id', actionId)),
@@ -40,21 +39,21 @@ const userComponent = ({ DOM }) => {
 
   const state = Observable.merge(deleteUser, toggleFilter, requestClick)
     .scan((acc, x) => x(acc), initialState)
-    .startWith(initialState)
-    .do(console.log);
+    .startWith(initialState);
 
   const view = state.map(data =>
-      div('.pv4.ph5', [
-        h1(`Filter: ${String(data.filter)}`),
-        button('.toggle-filter.pa3.mb4', 'toggle filter'),
-        button('.refresh-user.pa3.mb4', 'refresh new user'),
-        data.users.length > 0 ? UserList(data.users) : p('Loading...'), // eslint-disable-line
-      ])
-    );
+    div('.pv4.ph5', [
+      h1(`Filter: ${String(data.filter)}`),
+      button('.toggle-filter.pa3.mb4', 'toggle filter'),
+      button('.refresh-user.pa3.mb4', 'refresh new user'),
+      data.users.length > 0 ? UserList(data.users) : p('Loading...'), // eslint-disable-line
+    ])
+  );
 
   const sinks = {
     DOM: view,
   };
+
   return sinks;
 };
 
@@ -72,8 +71,8 @@ const main = (sources) => {
   const view = state
     .map(children =>
       div('.pv4.ph5', [
-        p('.mainMenu.dib.mr4', 'index'),
-        p('.userMenu.dib', 'user'),
+        button('.mainMenu.dib.pa3', 'index'),
+        button('.userMenu.dib.pa3', 'user'),
         hr(),
         children,
       ])
