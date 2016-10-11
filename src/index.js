@@ -1,11 +1,18 @@
 import { Observable } from 'rxjs';
 import { run } from '@cycle/rxjs-run';
-import { makeDOMDriver, button, div, p, h1 } from '@cycle/dom';
+import { makeDOMDriver, button, div, p, h1, hr } from '@cycle/dom';
 import fetch from 'universal-fetch';
 import R from 'ramda';
 import UserList from './User/UserList';
 
-const main = ({ DOM }) => {
+const mainComponent = () => ({
+  DOM: Observable.of('state')
+    .map(e =>
+    h1(`default ${e}!`)
+  ),
+});
+
+const userComponent = ({ DOM }) => {
   const initialState = { users: [], filter: true };
 
   const toggleFilter = DOM.select('.toggle-filter').events('click')
@@ -16,8 +23,9 @@ const main = ({ DOM }) => {
       })(state));
 
   const deleteUser = DOM.select('.delete-user').events('click')
-    .map(e => e.currentTarget.getAttribute('key'))
+    .map(e => e.target.getAttribute('key'))
     .map(Number)
+    .do(console.log)
     .map(actionId => state =>
       R.evolve({
         users: R.reject(R.propEq('id', actionId)),
@@ -41,6 +49,38 @@ const main = ({ DOM }) => {
         button('.toggle-filter.pa3.mb4', 'toggle filter'),
         button('.refresh-user.pa3.mb4', 'refresh new user'),
         data.users.length > 0 ? UserList(data.users) : p('Loading...'), // eslint-disable-line
+      ])
+    );
+
+  const sinks = {
+    DOM: view,
+  };
+  return sinks;
+};
+
+const main = (sources) => {
+  const mainComponentDOM = mainComponent(sources).DOM;
+  const userComponentDOM = userComponent(sources).DOM;
+
+  const userMenu = sources.DOM.select('.userMenu').events('click')
+    .mapTo(mainComponentDOM)
+    .startWith('');
+
+  const mainMenu = sources.DOM.select('.mainMenu').events('click')
+    .mapTo(userComponentDOM)
+    .startWith('');
+
+  const state = Observable.merge(userMenu, mainMenu)
+    .startWith(mainComponentDOM)
+    .flatMap(e => e);
+
+  const view = state
+    .map(children =>
+      div('.pv4.ph5', [
+        p('.userMenu.dib.mr4', 'user test'),
+        p('.mainMenu.dib', 'todolist'),
+        hr(),
+        children,
       ])
     );
 
