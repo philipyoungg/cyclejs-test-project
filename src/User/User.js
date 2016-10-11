@@ -6,7 +6,7 @@ import {
 } from '@cycle/dom';
 
 const User = ({ id, name, email }) =>
-  li('.mb5', [
+  li('.mb5', { key: id }, [
     h1('.mb0', name),
     p('.mt2.mb4.black-60', email),
     span('.delete-user.pointer.ba.pa2.hover-bg-black.hover-white.bg-animate',
