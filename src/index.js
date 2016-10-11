@@ -67,8 +67,7 @@ const main = (sources) => {
 
   const state = Observable.merge(userMenu, mainMenu)
     .startWith(mainComponent)
-    .map(comp => comp(sources).DOM)
-    .flatMap(e => e);
+    .flatMap(comp => comp(sources).DOM);
 
   const view = state
     .map(children =>
