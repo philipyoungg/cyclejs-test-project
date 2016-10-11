@@ -59,26 +59,22 @@ const userComponent = ({ DOM }) => {
 };
 
 const main = (sources) => {
-  const mainComponentDOM = mainComponent(sources).DOM;
-  const userComponentDOM = userComponent(sources).DOM;
-
   const userMenu = sources.DOM.select('.userMenu').events('click')
-    .mapTo(mainComponentDOM)
-    .startWith('');
+    .mapTo(userComponent);
 
   const mainMenu = sources.DOM.select('.mainMenu').events('click')
-    .mapTo(userComponentDOM)
-    .startWith('');
+    .mapTo(mainComponent);
 
   const state = Observable.merge(userMenu, mainMenu)
-    .startWith(mainComponentDOM)
+    .startWith(mainComponent)
+    .map(comp => comp(sources).DOM)
     .flatMap(e => e);
 
   const view = state
     .map(children =>
       div('.pv4.ph5', [
-        p('.userMenu.dib.mr4', 'user test'),
-        p('.mainMenu.dib', 'todolist'),
+        p('.mainMenu.dib.mr4', 'index'),
+        p('.userMenu.dib', 'user'),
         hr(),
         children,
       ])
