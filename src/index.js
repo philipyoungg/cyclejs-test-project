@@ -1,32 +1,43 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { run } from '@cycle/rxjs-run';
-import { makeDOMDriver, button, div, p } from '@cycle/dom';
+import { makeDOMDriver, button, div, p, h1 } from '@cycle/dom';
 import fetch from 'universal-fetch';
-
+import R from 'ramda';
 import UserList from './User/UserList';
-import { initUser, deleteUser, toggleFilter } from './User/userReducer';
 
-const main = ({ DOM, store }) => {
-  const toggleFilter$ = DOM.select('.toggle-filter').events('click')
+const main = ({ DOM }) => {
+  const initialState = { users: [], filter: true };
+
+  const toggleFilter = DOM.select('.toggle-filter').events('click')
     .mapTo('toggle click')
-    .map(toggleFilter);
+    .map(bool => state => //eslint-disable-line
+      R.evolve({
+        filter: R.not,
+      })(state));
 
-  const deleteUser$ = DOM.select('.delete-user').events('click')
+  const deleteUser = DOM.select('.delete-user').events('click')
     .map(e => e.currentTarget.getAttribute('key'))
     .map(Number)
-    .map(deleteUser);
+    .map(actionId => state =>
+      R.evolve({
+        users: R.reject(R.propEq('id', actionId)),
+      })(state));
 
-  const requestClick$ = DOM.select('.refresh-user').events('click')
+  const requestClick = DOM.select('.refresh-user').events('click')
     .startWith('init click')
     .mapTo('https://jsonplaceholder.typicode.com/users/')
     .flatMap(URL => Observable.fromPromise(fetch(URL)))
     .flatMap(x => x.json())
-    .map(initUser);
+    .map(initState => state => R.assoc('users', initState)(state));
 
-  const state$ = Observable.merge(deleteUser$, toggleFilter$, requestClick$);
+  const state = Observable.merge(deleteUser, toggleFilter, requestClick)
+    .scan((acc, x) => x(acc), initialState)
+    .startWith(initialState)
+    .do(console.log);
 
-  const vDOM$ = store.map(data =>
+  const view = state.map(data =>
       div('.pv4.ph5', [
+        h1(`Filter: ${String(data.filter)}`),
         button('.toggle-filter.pa3.mb4', 'toggle filter'),
         button('.refresh-user.pa3.mb4', 'refresh new user'),
         data.users.length > 0 ? UserList(data.users) : p('Loading...'), // eslint-disable-line
@@ -34,36 +45,13 @@ const main = ({ DOM, store }) => {
     );
 
   const sinks = {
-    DOM: vDOM$,
-    store: state$,
+    DOM: view,
   };
   return sinks;
 };
 
-const makeStoreDriver = initialState => state$ =>
-  state$
-  .scan((state, action) => action(state), initialState)
-  .startWith(initialState)
-  .map(e => {
-    console.log(e);
-    return e;
-  });
-
-const makeActionDriver = actions => () => {
-  const obj = {};
-  actions.forEach(action => {
-    obj[action] = new Subject();
-  });
-  return obj;
-};
-
 const drivers = {
   DOM: makeDOMDriver('#app'),
-  store: makeStoreDriver({ filter: false, users: [] }),
-  actions: makeActionDriver([
-    'TOGGLE_FILTER',
-    'DELETE_USER',
-  ]),
 };
 
 run(main, drivers);
