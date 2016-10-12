@@ -15,4 +15,5 @@ To understand cycle.js data flow and how it works behind the scene.
 git clone https://github.com/philipyoungg/cyclejs-test-project
 npm i
 npm start
+navigate to `localhost:8080`
 ```
