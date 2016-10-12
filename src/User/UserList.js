@@ -2,11 +2,9 @@ import {
   ul,
   p,
 } from '@cycle/dom';
-import User from './User';
+import user from './user';
 
-const UserList = users => // eslint-disable-line
+export default (users) => // eslint-disable-line
   users.length > 0 ?
-  ul(users.map(User)) :
+  ul(users.map(user)) :
   p('.f3', 'Loading...');
-
-export default UserList;
